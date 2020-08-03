@@ -30,6 +30,7 @@ class MapPicker extends StatefulWidget {
     this.automaticallyAnimateToCurrentLocation,
     this.mapStylePath,
     this.appBarColor,
+    this.appBarTitle,
     this.searchBarBoxDecoration,
     this.hintText,
     this.resultCardConfirmIcon,
@@ -51,6 +52,7 @@ class MapPicker extends StatefulWidget {
   final String mapStylePath;
 
   final Color appBarColor;
+  final Text appBarTitle;
   final BoxDecoration searchBarBoxDecoration;
   final String hintText;
   final Widget resultCardConfirmIcon;
@@ -74,6 +76,8 @@ class MapPickerState extends State<MapPicker> {
   Position _currentPosition;
 
   String _address;
+
+  Timer _debounceSearch;
 
   void _onToggleMapTypePressed() {
     final MapType nextType =
@@ -136,7 +140,10 @@ class MapPickerState extends State<MapPicker> {
         if (_currentPosition == null &&
             widget.automaticallyAnimateToCurrentLocation &&
             widget.requiredGPS) {
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+              child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xffFE5900)),
+          ));
         }
 
         return buildMap();
@@ -170,8 +177,12 @@ class MapPickerState extends State<MapPicker> {
             },
             onCameraIdle: () async {
               print("onCameraIdle#_lastMapPosition = $_lastMapPosition");
-              LocationProvider.of(context, listen: false)
-                  .setLastIdleLocation(_lastMapPosition);
+              if (_debounceSearch?.isActive ?? false) _debounceSearch.cancel();
+              _debounceSearch = Timer(const Duration(milliseconds: 1500), () {
+                print('iget');
+                LocationProvider.of(context, listen: false)
+                    .setLastIdleLocation(_lastMapPosition);
+              });
             },
             onCameraMoveStarted: () {
               print("onCameraMoveStarted#_lastMapPosition = $_lastMapPosition");
@@ -217,7 +228,10 @@ class MapPickerState extends State<MapPicker> {
                         loadingIndicator: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: <Widget>[
-                            CircularProgressIndicator(),
+                            CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  Color(0xffFE5900)),
+                            ),
                           ],
                         ),
                         builder: (context, address) {
@@ -230,6 +244,7 @@ class MapPickerState extends State<MapPicker> {
                   ),
                   Spacer(),
                   FloatingActionButton(
+                    backgroundColor: Color(0xffFE5900),
                     onPressed: () {
                       Navigator.of(context).pop({
                         'location': LocationResult(
@@ -239,7 +254,7 @@ class MapPickerState extends State<MapPicker> {
                       });
                     },
                     child: widget.resultCardConfirmIcon ??
-                        Icon(Icons.arrow_forward),
+                        Icon(Icons.arrow_forward_ios
                   ),
                 ],
               ),
@@ -272,7 +287,13 @@ class MapPickerState extends State<MapPicker> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Icon(Icons.place, size: 56),
+            Icon(
+              Icons.place,
+              size: 56,
+              color: widget.appBarTitle.data == 'Pin Pick-up'
+                  ? Color(0xff3778F9)
+                  : Color(0xffFE5900),
+            ),
             Container(
               decoration: ShapeDecoration(
                 shadows: [
@@ -398,6 +419,7 @@ class _MapFabs extends StatelessWidget {
           if (layersButtonEnabled)
             FloatingActionButton(
               onPressed: onToggleMapTypePressed,
+              backgroundColor: Color(0xffFE5900),
               materialTapTargetSize: MaterialTapTargetSize.padded,
               mini: true,
               child: const Icon(Icons.layers),
@@ -406,6 +428,7 @@ class _MapFabs extends StatelessWidget {
           if (myLocationButtonEnabled)
             FloatingActionButton(
               onPressed: onMyLocationPressed,
+              backgroundColor: Color(0xffFE5900),
               materialTapTargetSize: MaterialTapTargetSize.padded,
               mini: true,
               child: const Icon(Icons.my_location),
