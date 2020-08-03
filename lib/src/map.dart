@@ -254,7 +254,7 @@ class MapPickerState extends State<MapPicker> {
                       });
                     },
                     child: widget.resultCardConfirmIcon ??
-                        Icon(Icons.arrow_forward_ios
+                        Icon(Icons.arrow_forward_ios),
                   ),
                 ],
               ),
